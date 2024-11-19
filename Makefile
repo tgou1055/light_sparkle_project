@@ -1,12 +1,24 @@
 ## Cluster management
 
-build:
+## build:
+##	docker compose build spark-master && docker compose up airflow-init
+
+build-1:
 	docker compose build spark-master
+
+build-2:
+	docker compose build airflow-init
+
+build-3:
+	docker compose build airflow-webserver
 
 docker-up:
 	docker compose up --build -d --scale spark-worker=2
 
-up: build docker-up
+perms:
+	sudo mkdir -p spark-job logs plugins temp dags tests data visualization && sudo chmod -R u=rwx,g=rwx,o=rwx spark-job logs plugins temp dags tests data visualization
+
+up: perms build-1 build-2 build-3 docker-up
 
 rm-logs:
 	docker volume rm -f light_sparkle_tpch-data light_sparkle_spark-logs
@@ -14,10 +26,13 @@ rm-logs:
 down:
 	docker compose down
 
-restart: down rm-logs build up
+restart: down rm-logs up
 
-sh:
+sh-spark:
 	docker exec -ti spark-master bash
+
+sh-webserver:
+	docker exec -ti webserver bash
 
 ## Data generation
 ## 0.1: 100 MB of data
@@ -25,8 +40,8 @@ sh:
 datagen:
 	docker exec -ti spark-master bash -c 'cd tpch-dbgen && make && ./dbgen -s 0.1'  
 
-upstream:
-	PGPASSWORD=sdepassword pgcli -h localhost -p 5432 -U sdeuser -d upstreamdb
+postgres:
+	docker exec -it postgres bash -c "psql -U airflow -d airflow"
 
 ## Create tables
 
@@ -42,34 +57,39 @@ create-tables:
 count-tables:
 	docker exec spark-master spark-sql --master spark://spark-master:7077 --deploy-mode client -f ./count.sql
 
-setup: datagen create-buckets create-tables upload-data-to-s3a
+## Connections
+setup-connection:
+	docker exec -ti webserver bash -c "python3 /opt/airflow/setup_conn.py"
+
+
+setup: datagen create-buckets create-tables upload-data-to-s3a setup-connection
 
 ## setup: datagen fake-datagen create-buckets create-tables upload-data-to-s3a
 
 ## Spark UIs: master UI, Spark application UI & History Server UI
 
-hserver-ui:
+airflow-ui:
+	open http://localhost:8080
+
+spark-hserver-ui:
 	open http://localhost:18080
 
-ui:
+spark-ui:
 	open http://localhost:4040
 
-master-ui:
+spark-master-ui:
 	open http://localhost:9090
 	
 minio:
 	open http://localhost:9000
 	
-rstudio:
-	open http://localhost:8787
-
 ## Start Pyspark and Spark SQL REPL sessions
 
 pyspark:
 	docker exec -ti spark-master bash pyspark --master spark://spark-master:7077 
 
 spark-sql:
-	docker exec -ti spark-master spark-sql --master spark://spark-master:7077 
+	docker exec -ti spark-master bash spark-sql --master spark://spark-master:7077 
 
 ## Pyspark runner
 

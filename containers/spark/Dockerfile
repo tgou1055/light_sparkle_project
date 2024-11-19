@@ -4,7 +4,7 @@ FROM deltaio/delta-docker:latest
 USER root
 
 COPY ./requirements.txt ./
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy SQL DDL and DML to SPARK_HOME dir
 COPY ./setup.sql ./
@@ -20,6 +20,17 @@ RUN apt-get update && \
     rsync && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+# Setup SSH server
+RUN apt-get update && apt-get install -y openssh-server
+RUN mkdir /var/run/sshd
+# Set root password for SSH access (change 'your_password' to your desired password)
+RUN echo 'root:password' | chpasswd
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+RUN service ssh restart
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]
 
 COPY ./conf/spark-defaults.conf "$SPARK_HOME/conf/spark-defaults.conf"
 COPY ./conf/metrics.properties "$SPARK_HOME/conf/metrics.properties"
