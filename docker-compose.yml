@@ -107,7 +107,7 @@ services:
       - "3000:3000"
       - "2222:22"
     volumes:
-      - ./data-processing-spark:/opt/spark/work-dir/data-processing-spark
+      - ./spark-job:/opt/spark/work-dir/spark-job
       - spark-logs:/opt/spark/spark-events
       - tpch-data:/opt/spark/tpch-dbgen
     environment:

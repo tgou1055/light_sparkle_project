@@ -1,62 +1,92 @@
+"""
+Setup connections from Airflow webserver to other services
+"""
 import subprocess
 
-# Define connection details
-conn_id = "aws_default"
-conn_type = "aws"
-access_key = "minio"
-secret_key = "minio123"
-region_name = "us-east-1"
-endpoint_url = "http://minio:9000"
-# Construct the extra JSON
-extra = {
-    "aws_access_key_id": access_key,
-    "aws_secret_access_key": secret_key,
-    "region_name": region_name,
-    "host": endpoint_url,
-}
-# Convert to JSON string
-extra_json = str(extra).replace("'", '"')
-# Define the CLI command
-command = [
-    "airflow",
-    "connections",
-    "add",
-    conn_id,
-    "--conn-type",
-    conn_type,
-    "--conn-extra",
-    extra_json,
-]
-# Execute the command
-subprocess.run(command)
 
+def airflow_connection_aws_minio():
+    """
+    Add SSH connection to transfer files to Minio
 
-def add_airflow_connection():
-    connection_id = "spark_conn"
-    connection_type = "spark"
-    host = "spark-master"
-    port = "7077"
+    :param
+
+    :return
+    """
+
+    # Define connection details
+    conn_id = "aws_default"
+    conn_type = "aws"
+    access_key = "minio"
+    secret_key = "minio123"
+    region_name = "us-east-1"
+    endpoint_url = "http://minio:9000"
+    # Construct the extra JSON
+    extra = {
+        "aws_access_key_id": access_key,
+        "aws_secret_access_key": secret_key,
+        "region_name": region_name,
+        "host": endpoint_url,
+    }
+    # Convert to JSON string
+    extra_json = str(extra).replace("'", '"')
+    # Define the CLI command
     cmd = [
         "airflow",
         "connections",
         "add",
-        connection_id,
+        conn_id,
+        "--conn-type",
+        conn_type,
+        "--conn-extra",
+        extra_json,
+    ]
+    # Execute the command
+    result = subprocess.run(cmd, capture_output=True, text=True) # pylint: disable=W1510
+    if result.returncode == 0:
+        print(f"Successfully added {conn_id} connection")
+    else:
+        print(f"Failed to add {conn_id} connection: {result.stderr}")
+
+
+
+def airflow_connection_ssh_spark():
+    """
+    Add SSH connection to submit spark job to standalone spark cluster
+
+    :param
+
+    :return
+    """
+    conn_id = "ssh_conn"
+    conn_type = "ssh"
+    host = "spark-master"
+    login = "root"
+    password = "password"
+    port = "22"
+    cmd = [
+        "airflow",
+        "connections",
+        "add",
+        conn_id,
+        "--conn-type",
+        conn_type,
         "--conn-host",
         host,
-        "--conn-type",
-        connection_type,
+        "--conn-login",
+        login,
+        "--conn-password",
+        password,
         "--conn-port",
         port,
     ]
 
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True) # pylint: disable=W1510
     if result.returncode == 0:
-        print(f"Successfully added {connection_id} connection")
+        print(f"Successfully added {conn_id} connection")
     else:
-        print(f"Failed to add {connection_id} connection: {result.stderr}")
+        print(f"Failed to add {conn_id} connection: {result.stderr}")
 
-add_airflow_connection()
-
-# wget https://dlcdn.apache.org/spark/spark-3.5.1/spark-3.5.1-bin-hadoop3.tgz -o spark-3.5.1-bin-hadoop3.tgz
-# chmod 755 spark-3.5.1-bin-hadoop3.tgz
-# tar xvzf spark-3.5.1-bin-hadoop3.tgz
+if __name__ == "__main__":
+    # Add connections
+    airflow_connection_ssh_spark()
+    airflow_connection_aws_minio()

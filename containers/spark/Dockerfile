@@ -28,9 +28,9 @@ RUN mkdir /var/run/sshd
 RUN echo 'root:password' | chpasswd
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
-RUN service ssh restart
 EXPOSE 22
 CMD ["/usr/sbin/sshd", "-D"]
+#RUN service ssh restart
 
 COPY ./conf/spark-defaults.conf "$SPARK_HOME/conf/spark-defaults.conf"
 COPY ./conf/metrics.properties "$SPARK_HOME/conf/metrics.properties"
