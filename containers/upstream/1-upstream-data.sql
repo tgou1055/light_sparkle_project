@@ -1,136 +1,53 @@
-CREATE SCHEMA IF NOT EXISTS rainforest;
+CREATE SCHEMA IF NOT EXISTS instacart;
 
-SET search_path TO rainforest;
+SET search_path TO instacart;
 
--- Create AppUser table
-CREATE TABLE AppUser (
-    user_id SERIAL PRIMARY KEY,
-    username VARCHAR(100) NOT NULL,
-    email VARCHAR(255) NOT NULL,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_updated_by INT ,
-    last_updated_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- Create asiles table and insert data
+CREATE TABLE aisles (
+    aisle_id INT PRIMARY KEY,
+    aisle VARCHAR(70) NOT NULL
 );
 
--- Create Category table
-CREATE TABLE Category (
-    category_id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    created_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_updated_by INT REFERENCES AppUser(user_id),
-    last_updated_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+COPY instacart.aisles(aisle_id, aisle) 
+FROM '/simulation_data/aisles/aisles.csv' DELIMITER ','  CSV HEADER;
+
+-- Create departments table and insert data
+CREATE TABLE departments (
+    department_id INT PRIMARY KEY,
+    department VARCHAR(70) NOT NULL
 );
 
--- Create Brand table
-CREATE TABLE Brand (
-    brand_id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    country VARCHAR(255),
-    created_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_updated_by INT REFERENCES AppUser(user_id),
-    last_updated_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+COPY instacart.departments(department_id, department) 
+FROM '/simulation_data/departments/departments.csv' DELIMITER ','  CSV HEADER;
+
+-- Create products table and insert data
+CREATE TABLE products (
+    product_id INT PRIMARY KEY,
+    product_name VARCHAR(200) NOT NULL,
+    aisle_id INT REFERENCES aisles(aisle_id) ON DELETE CASCADE,
+    department_id INT REFERENCES departments(department_id) ON DELETE CASCADE  
 );
 
--- Create Manufacturer table
-CREATE TABLE Manufacturer (
-    manufacturer_id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    type VARCHAR(255),
-    created_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_updated_by INT REFERENCES AppUser(user_id),
-    last_updated_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+COPY instacart.products(product_id, product_name, aisle_id, department_id) 
+FROM '/simulation_data/products/products.csv' DELIMITER ','  CSV HEADER;
 
--- Create Product table
-CREATE TABLE Product (
-    product_id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    description TEXT,
-    price DECIMAL(10, 2) NOT NULL,
-    brand_id INT REFERENCES Brand(brand_id),
-    manufacturer_id INT REFERENCES Manufacturer(manufacturer_id),
-    created_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_updated_by INT REFERENCES AppUser(user_id),
-    last_updated_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Create Ratings table
-CREATE TABLE Ratings (
-    ratings_id SERIAL PRIMARY KEY,
-    product_id INT REFERENCES Product(product_id),
-    rating DECIMAL(3, 2),
-    created_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_updated_by INT REFERENCES AppUser(user_id),
-    last_updated_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Create Seller table
-CREATE TABLE Seller (
-    seller_id SERIAL PRIMARY KEY,
-    user_id INT UNIQUE REFERENCES AppUser(user_id) ON DELETE CASCADE,
-    first_time_sold_timestamp TIMESTAMP,
-    created_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_updated_by INT REFERENCES AppUser(user_id),
-    last_updated_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Create Buyer table
-CREATE TABLE Buyer (
-    buyer_id SERIAL PRIMARY KEY,
-    user_id INT UNIQUE REFERENCES AppUser(user_id) ON DELETE CASCADE,
-    first_time_purchased_timestamp TIMESTAMP,
-    created_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_updated_by INT REFERENCES AppUser(user_id),
-    last_updated_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Create Order table
+-- Create orders table and insert data
 CREATE TABLE orders (
-    order_id SERIAL PRIMARY KEY,
-    buyer_id INT REFERENCES Buyer(buyer_id) ON DELETE CASCADE,
-    order_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    total_price DECIMAL(10, 2) NOT NULL,
-    created_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    order_id INT PRIMARY KEY,
+    user_id INT NOT NULL,
+    eval_set VARCHAR(10) NOT NULL,
+    order_number SMALLINT NOT NULL,
+    order_dow SMALLINT NOT NULL,
+    order_hour_of_day SMALLINT NOT NULL,
+    days_since_prior_order FLOAT
 );
 
--- Create OrderItem table
-CREATE TABLE OrderItem (
-    order_item_id SERIAL PRIMARY KEY,
-    order_id INT REFERENCES orders(order_id) ON DELETE CASCADE,
-    product_id INT REFERENCES Product(product_id) ON DELETE CASCADE,
-    seller_id INT REFERENCES Seller(seller_id) ON DELETE CASCADE,
-    quantity INT NOT NULL,
-    base_price DECIMAL(10, 2) NOT NULL,
-    tax DECIMAL(10, 2) NOT NULL,
-    created_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Create SellerProduct table
-CREATE TABLE SellerProduct (
-    seller_id INT REFERENCES Seller(seller_id) ON DELETE CASCADE,
-    product_id INT REFERENCES Product(product_id) ON DELETE CASCADE,
-    PRIMARY KEY (seller_id, product_id)
-);
-
--- Create Clickstream table
-CREATE TABLE Clickstream (
-    event_id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES AppUser(user_id) ON DELETE CASCADE,
-    event_type VARCHAR(20) NOT NULL,
-    product_id INT REFERENCES Product(product_id),
-    order_id INT REFERENCES orders(order_id),
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE ProductCategory (
-    product_id INTEGER,
-    category_id INTEGER,
-    PRIMARY KEY (product_id, category_id),
-    FOREIGN KEY (product_id) REFERENCES Product(product_id),
-    FOREIGN KEY (category_id) REFERENCES Category(category_id),
-    created_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_updated_by INT REFERENCES AppUser(user_id),
-    last_updated_ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+COPY instacart.orders(order_id, 
+                      user_id, 
+                      eval_set, 
+                      order_number,
+                      order_dow,
+                      order_hour_of_day,
+                      days_since_prior_order
+                      ) 
+FROM '/simulation_data/orders/orders.csv' DELIMITER ','  CSV HEADER;

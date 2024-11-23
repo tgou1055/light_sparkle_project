@@ -55,9 +55,7 @@ try:
     s3_client = create_s3_client(access_key, secret_key, endpoint, region)
     bucket_name = 'tpch'# Replace with your bucket name
     create_bucket_if_not_exists(s3_client, bucket_name)
-    bucket_name = 'rainforest'# Replace with your bucket name
-    create_bucket_if_not_exists(s3_client, bucket_name)
-    bucket_name = 'data' # This bucket is for storing exploratory datasets
+    bucket_name = 'insta-cart' # This bucket is for storing exploratory datasets
     create_bucket_if_not_exists(s3_client, bucket_name)
 except:
     print("Full catch, check bucket creation script at create_buckets.py")

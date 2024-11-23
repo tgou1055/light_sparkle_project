@@ -16,7 +16,7 @@ x-airflow-common:
     AIRFLOW_CONN_POSTGRES_DEFAULT: postgres://airflow:airflow@postgres:5432/airflow
   volumes:
     - ./dags:/opt/airflow/dags
-    - ./data:/opt/airflow/data
+    #- ./data:/opt/airflow/data
     - ./visualization:/opt/airflow/visualization
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
@@ -40,6 +40,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
+      - ./data/simulation_data:/simulation_data
       - ./containers/upstream/1-upstream-data.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "airflow" ]
@@ -108,6 +109,7 @@ services:
       - "2222:22"
     volumes:
       - ./spark-job:/opt/spark/work-dir/spark-job
+      - ./data:/opt/spark/work-dir/data
       - spark-logs:/opt/spark/spark-events
       - tpch-data:/opt/spark/tpch-dbgen
     environment:
@@ -137,7 +139,7 @@ services:
     image: spark-image
     entrypoint: ['./entrypoint.sh', 'worker']
     volumes:
-      - ./data-processing-spark:/opt/spark/work-dir/data-processing-spark
+      - ./spark-job:/opt/spark/work-dir/spark-job
       - spark-logs:/opt/spark/spark-events
       - tpch-data:/opt/spark/tpch-dbgen
     env_file:
@@ -170,7 +172,7 @@ services:
     depends_on:
       - minio
     entrypoint: >
-      /bin/sh -c " /usr/bin/mc config host add myminio http://minio:9000 minio minio123; /usr/bin/mc rm -r --force myminio/tpch; /usr/bin/mc mb myminio/tpch; /usr/bin/mc policy download myminio/tpch; /usr/bin/mc rm -r --force myminio/rainforest; /usr/bin/mc mb myminio/rainforest; /usr/bin/mc policy download myminio/rainforest; exit 0; "
+      /bin/sh -c " /usr/bin/mc config host add myminio http://minio:9000 minio minio123; /usr/bin/mc rm -r --force myminio/tpch; /usr/bin/mc mb myminio/tpch; /usr/bin/mc policy download myminio/tpch; /usr/bin/mc rm -r --force myminio/insta-cart; /usr/bin/mc mb myminio/insta-cart; /usr/bin/mc policy download myminio/insta-cart; exit 0; "
 
 volumes:
   spark-logs:

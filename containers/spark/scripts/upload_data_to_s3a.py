@@ -57,8 +57,8 @@ region = 'us-east-1'
 # Client upload directory to s3a
 try:
     s3_client = create_s3_client(access_key, secret_key, endpoint, region)
-    DATA_DIRECTORY = '/opt/spark/work-dir/data/'
-    BUCKET_NAME = 'data'
+    DATA_DIRECTORY = '/opt/spark/work-dir/data/labeled_data'
+    BUCKET_NAME = 'insta-cart'
     upload_data_to_s3(s3_client, DATA_DIRECTORY, BUCKET_NAME)
 except ClientError:
     print("Full catch, check script at upload_data_to_s3a.py")

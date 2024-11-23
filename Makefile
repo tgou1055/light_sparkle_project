@@ -38,7 +38,7 @@ sh-webserver:
 ## 0.1: 100 MB of data
 
 datagen:
-	docker exec -ti spark-master bash -c 'cd tpch-dbgen && make && ./dbgen -s 0.05'  
+	docker exec -ti spark-master bash -c 'cd tpch-dbgen && make && ./dbgen -s 0.02'  
 
 postgres:
 	docker exec -it postgres bash -c "psql -U airflow -d airflow"

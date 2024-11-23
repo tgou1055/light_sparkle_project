@@ -7,10 +7,11 @@ COPY ./requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy SQL DDL and DML to SPARK_HOME dir
-COPY ./setup.sql ./
-COPY ./count.sql ./
-COPY ./create_buckets.py ./
-COPY ./upload_data_to_s3a.py ./
+COPY ./sql/setup.sql ./
+COPY ./sql/count.sql ./
+COPY ./scripts/create_buckets.py ./
+COPY ./scripts/upload_data_to_s3a.py ./
+COPY ./scripts/explore_imba_data_pandas.ipynb ./
 
 # Copy tpch data generator into the container
 COPY ./tpch-dbgen ./tpch-dbgen/
